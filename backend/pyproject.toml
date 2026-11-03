@@ -1,0 +1,9 @@
+[project]
+name = "pdf-to-word-backend"
+version = "1.0.0"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "scripts"]
+addopts = "-ra"

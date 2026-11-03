@@ -1,0 +1,89 @@
+# Production deployment on a single server.
+#   cp .env.example .env    # set DOMAIN and ACME_EMAIL
+#   docker compose -f docker-compose.prod.yml up -d --build
+# See DEPLOY.md.
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  caddy:
+    image: caddy:2.10-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in .env}
+      ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL in .env}
+      MAX_REQUEST_MB: ${MAX_REQUEST_MB:-26}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      frontend:
+        condition: service_healthy
+    restart: unless-stopped
+    logging: *logging
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      BACKEND_URL: http://backend:8000
+    expose:
+      - "3000"
+    read_only: true
+    tmpfs:
+      - /tmp
+    mem_limit: 512m
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    logging: *logging
+
+  backend:
+    build:
+      context: ./backend
+      target: runtime
+    environment:
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-25}
+      MAX_PAGES: ${MAX_PAGES:-300}
+      CONVERSION_TIMEOUT_SECONDS: ${CONVERSION_TIMEOUT_SECONDS:-180}
+      MAX_CONCURRENT_JOBS: ${MAX_CONCURRENT_JOBS:-2}
+      MAX_QUEUED_JOBS: ${MAX_QUEUED_JOBS:-20}
+      JOB_TTL_SECONDS: ${JOB_TTL_SECONDS:-600}
+      RATE_LIMIT_PER_HOUR: ${RATE_LIMIT_PER_HOUR:-20}
+      RATE_LIMIT_PER_DAY: ${RATE_LIMIT_PER_DAY:-60}
+      MAX_ACTIVE_JOBS_PER_CLIENT: ${MAX_ACTIVE_JOBS_PER_CLIENT:-1}
+      OCR_LANGUAGE: ${OCR_LANGUAGE:-eng}
+      WORK_DIR: /tmp/pdf2word
+      STATS_DB: /data/stats.db
+      # Safe only because the backend is reachable solely through the frontend proxy.
+      TRUST_CLIENT_IP_HEADER: "true"
+    expose:
+      - "8000"
+    read_only: true
+    tmpfs:
+      - /tmp:size=1g,mode=1777
+    volumes:
+      - stats_data:/data
+    mem_limit: ${BACKEND_MEMORY:-2g}
+    cpus: ${BACKEND_CPUS:-2}
+    pids_limit: 128
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    logging: *logging
+
+volumes:
+  caddy_data:
+  caddy_config:
+  stats_data:

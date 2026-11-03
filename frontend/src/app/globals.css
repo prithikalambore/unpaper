@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+/* Unpaper brand: a sunny 90s desktop. Navy outlines and hard shadows, candy title bars. */
+:root {
+  --sky: #6ad4f7;
+  --navy: #1d1048;
+  --navy-soft: #4a3f78;
+  --paper: #ffffff;
+  --yellow: #f9d949;
+  --pink: #ef72c3;
+  --purple: #9c55e6;
+  --orange: #f4a63b;
+  --arc: rgba(255, 255, 255, 0.62);
+}
+
+@theme inline {
+  --color-sky: var(--sky);
+  --color-navy: var(--navy);
+  --color-navy-soft: var(--navy-soft);
+  --color-paper: var(--paper);
+  --color-yellow: var(--yellow);
+  --color-pink: var(--pink);
+  --color-purple: var(--purple);
+  --color-orange: var(--orange);
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --shadow-hard: 6px 6px 0 var(--navy);
+  --shadow-hard-sm: 3px 3px 0 var(--navy);
+}
+
+html {
+  background: var(--sky);
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--sky);
+  /* Concentric orbit lines radiating from below the bottom-left corner, as in the brand art. */
+  background-image: repeating-radial-gradient(
+    circle at 18% 115%,
+    transparent 0 58px,
+    var(--arc) 58px 60px
+  );
+  background-attachment: fixed;
+  color: var(--navy);
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 3px solid var(--navy);
+  outline-offset: 3px;
+}
+
+/* Pixel checkerboard patches used as decoration. */
+.pixels {
+  background-image: conic-gradient(var(--paper) 25%, transparent 0 50%, var(--paper) 0 75%, transparent 0);
+  background-size: 18px 18px;
+  -webkit-mask-image: radial-gradient(circle at center, #000 30%, transparent 72%);
+  mask-image: radial-gradient(circle at center, #000 30%, transparent 72%);
+}
+
+/* Chunky segmented progress fill. */
+.progress-fill {
+  background-image: repeating-linear-gradient(90deg, var(--purple) 0 14px, transparent 14px 18px);
+  transition: width 300ms ease-out;
+}
+
+/* The one orchestrated motion: the result dialog pops open. */
+@keyframes pop {
+  0% { transform: scale(0.92); opacity: 0; }
+  70% { transform: scale(1.02); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+.pop {
+  animation: pop 260ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pop { animation: none; }
+  .progress-fill { transition: none; }
+}

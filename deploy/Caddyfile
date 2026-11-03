@@ -1,0 +1,28 @@
+# Public entry point: HTTPS (automatic Let's Encrypt certificates), compression,
+# security headers and a hard request-size cap in front of the app.
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	# Reject oversized uploads before they reach the app (MAX_UPLOAD_MB + multipart overhead).
+	request_body {
+		max_size {$MAX_REQUEST_MB}MB
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+
+	# Caddy replaces any client-supplied X-Forwarded-For with the real client address,
+	# which the app uses for per-visitor rate limits.
+	reverse_proxy frontend:3000
+
+	log {
+		output stdout
+		format json
+	}
+}

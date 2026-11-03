@@ -1,0 +1,7 @@
+.DS_Store
+samples/
+backend/.venv/
+**/__pycache__/
+.pytest_cache/
+.env
+.claude/
