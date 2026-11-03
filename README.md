@@ -12,15 +12,50 @@ and anonymous usage stats and feedback so you can see whether people find it use
 
 ## Quick start (Docker, local)
 
-```bash
-docker compose up --build
-```
-
-Open <http://localhost:3000>. If port 3000 is taken:
+From the project folder, start it in the background:
 
 ```bash
-FRONTEND_PORT=3002 docker compose up --build
+docker compose up -d --build
 ```
+
+Open <http://localhost:3000>. Stop it with:
+
+```bash
+docker compose down
+```
+
+| Task | Command |
+| --- | --- |
+| Start (no code changes since last time, faster) | `docker compose up -d` |
+| Start after code changes (rebuilds the images) | `docker compose up -d --build` |
+| Start in the foreground with live logs (Ctrl+C stops it) | `docker compose up --build` |
+| Stop | `docker compose down` |
+| Live logs of a background run | `docker compose logs -f` |
+
+**If port 3000 is taken** ("Bind for 0.0.0.0:3000 failed: port is already allocated"), pick another
+port. Put it in a `.env` file in the project folder once, and every command above uses it:
+
+```bash
+echo "FRONTEND_PORT=3002" >> .env
+```
+
+Then open <http://localhost:3002>. The `.env` file is git-ignored, so it stays on your machine.
+For a one-off run, `FRONTEND_PORT=3002 docker compose up -d` works too. The Next.js log line
+"Local: http://localhost:3000" refers to the port inside the container; use the port you chose.
+
+### Usage stats and feedback
+
+The local setup keeps anonymous usage counts and the "Did it work for you?" answers in a Docker
+volume, so they survive restarts. With the app running:
+
+```bash
+docker compose exec backend python -m app.stats            # last 30 days
+docker compose exec backend python -m app.stats --days 7
+```
+
+It shows visitors, uploads, conversions, failures, pages, the mode used, error types and every
+feedback comment. No IP addresses, file names or document contents are stored. `docker compose
+down` keeps the data; `docker compose down -v` deletes it.
 
 Only the frontend is published. The browser talks to Next.js, which proxies `/api/*` to the backend
 over the private Compose network. The backend container runs read-only, as a non-root user, with
